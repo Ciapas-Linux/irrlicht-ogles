@@ -3,9 +3,7 @@ This repository contain copy: https://sourceforge.net/p/irrlicht/code/HEAD/tree/
 with minimal changes to help build irrlicht binaries for android platforms.
 
 
-===================================
 The Irrlicht Engine SDK version 1.9
-===================================
 
   Welcome to the Irrlicht Engine SDK.
 
