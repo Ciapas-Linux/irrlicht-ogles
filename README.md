@@ -1,7 +1,8 @@
 
 This repository contain copy: https://sourceforge.net/p/irrlicht/code/HEAD/tree/branches/ogl-es/ brought to you by: cutealien, nimphoenix2
 
-Ciapas-Linux made tiny minimal changes to makefiles and build instruction for help build irrlicht binaries for android platforms. Instructions how to build for android is inside Android folder.
+Ciapas-Linux made tiny minimal changes to makefiles and build instruction for help build irrlicht binaries for android platforms. Instructions how to build for android is inside Android folder. https://github.com/Ciapas-Linux/irrlicht-ogles/tree/main/Android
+
 
 <p align="center">
   <img width="256" height="256" src="https://github.com/Ciapas-Linux/assets/blob/main/Web/irrlichtlogo2.png">
