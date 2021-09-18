@@ -4,7 +4,7 @@ This repository contain copy: https://sourceforge.net/p/irrlicht/code/HEAD/tree/
 Ciapas-Linux made tiny minimal changes to makefiles and build instruction for help build irrlicht binaries for android platforms. Instructions how to build for android is inside Android folder.
 
 <p align="center">
-  <img width="256" height="256" src="irrlichtlogo2.png">
+  <img width="256" height="256" src="https://github.com/Ciapas-Linux/assets/blob/main/Web/irrlichtlogo2.png">
 </p>
 
 
