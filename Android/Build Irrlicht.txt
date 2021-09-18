@@ -1,0 +1,305 @@
+
+This is build instructions from:
+https://irrlicht.sourceforge.io/forum/viewtopic.php?f=5&t=52182
+Posted by LunaRebirth » Mon Jan 29, 2018 10:14 pm
+
+
+Using debian linux i build irrlicht engine and create working android studio project
+but from 2018 some things was change, so this recipe schould be
+updated for now 2021. 
+
+Building Irrlicht Example 01 with Gradle:
+
+
+Requirements:
+
+Irrlicht (OGL-ES): https://sourceforge.net/p/irrlicht/code ... es/ogl-es/
+Cygwin: https://www.cygwin.com/
+Android Studio: https://developer.android.com/studio/index.html
+Android NDK & SDK: (available for download in Android Studio)
+
+under linux you need add this paths to shell path variable
+by editing .bashrc bash local configuration file
+
+
+add lines to yours file .bashrc or .profile one of this hidden files inside home directory
+replace build tools version, mine: 31.0.0
+replace ndk version to fit, mine: 23.0.7599858
+replace java path and version, mine: /home/$USER/JDK/graalvm-ce-java16
+replace android sdk path to match you needs mine:  /home/$USER/Android/Sdk
+
+export JAVA_HOME="/home/$USER/JDK/graalvm-ce-java16"
+export ANDROID_SDK_ROOT=/home/$USER/Android/Sdk
+export ANDROID_HOME=$ANDROID_SDK_ROOT 
+export ANDROID_NDK_HOME=/home/$USER/Android/Sdk/ndk/23.0.7599858
+
+export PATH="$PATH:$ANDROID_SDK_ROOT/build-tools/31.0.0:\
+$ANDROID_SDK_ROOT/cmdline-tools/latest/bin:\
+$ANDROID_SDK_ROOT/emulator:\
+$ANDROID_SDK_ROOT/tools:\
+$ANDROID_SDK_ROOT/platform-tools:\
+$JAVA_HOME/bin:\
+$ANDROID_NDK_HOME:\
+$ANDROID_HOME/bin"
+ 
+  
+
+1. Compile Irrlicht
+*Before this step, make sure you have already downloaded Android Studio, the NDK and SDK.
+
+Download the OGL-ES snapshot from the link given above.
+Extract it to any location.
+Open Cygwin, and cd to your Irrlicht directory.
+
+cd /home/username/IrrlichtPath/source/Irrlicht/Android
+
+ndk-build
+
+This may take a while to compile Irrlicht for different targets. In the end, you should see these 
+folders in location "IrrlichtPath/source/Irrlicht/Android/obj/local/": "arm64-v8a", "armeabi", 
+"armeabi-v7a", "mips64", "x86", "x86_64".
+
+*I mention the required targets because the OGL-ES branch I have to try compiling twice before I 
+get the "x86" folder. I'm unsure why.
+
+
+2. Create an Android Studio project
+
+This is little out date !!!
+
+In Android Studio, press File > New > New Project. Give your project any name and location you 
+want. Select "Include C++ Support" and a minimum SDK (I'm using the default value -- currently 16). 
+Press Next, and choose the "Empty Activity". UNCHECK "Generate Layout File" and "Backwards 
+Compatibility (AppCompat)". Press "Finish" to create the project.
+
+
+
+3. Android Studio Project Files
+Firstly, in Android Studio, go to app > cpp. Right-click "native-lib.cpp" and delete it from the 
+project.  In Android Studio's project browser, open app > java > (YOUR PROJECT) > MainActivity. 
+Edit it to look like this: 
+
+
+package <YOUR PROJECT PACKAGE>;
+ 
+import android.app.NativeActivity;
+import android.os.Bundle;
+ 
+public class MainActivity extends NativeActivity {
+ 
+    public void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+    }
+}
+
+
+(Don't forget to change the package name to your project's package).
+
+Now go to app > manifests. Edit AndroidManifest.xml to look like this: 
+
+
+
+<?xml version="1.0" encoding="utf-8"?>
+<manifest
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    package="(YOUR PROJECT PACKAGE HERE)" >
+ 
+    <application
+        android:allowBackup="false"
+        android:icon="@mipmap/ic_launcher"
+        android:label="@string/app_name"
+        android:theme="@android:style/Theme.NoTitleBar.Fullscreen">
+ 
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait">
+ 
+            <meta-data
+                android:name="android.app.lib_name"
+                android:value="native-lib" />
+ 
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter>
+        </activity>
+    </application>
+</manifest>
+
+
+(You may need to change android:name=".MainActivity" to 
+android:name="com.yourpackage.MainActivity", though you probably won't have to).  Press the 
+drop-down for "External Build Files" in Android Studio. Edit CMakeLists.txt to look like this: 
+
+
+# Sets the minimum version of CMake required to build the native
+# library. You should either keep the default value or only pass a
+# value of 3.4.0 or lower.
+ 
+cmake_minimum_required(VERSION 3.4.1)
+ 
+# Creates and names a library, sets it as either STATIC
+# or SHARED, and provides the relative paths to its source code.
+# You can define multiple libraries, and CMake builds it for you.
+# Gradle automatically packages shared libraries with your APK.
+ 
+add_library( # Sets the name of the library.
+             app-glue
+ 
+             # Sets the library as a shared library.
+             STATIC
+ 
+             # Provides a relative path to your source file(s).
+             # Associated headers in the same location as their source
+             # file are automatically included.
+             ${ANDROID_NDK}/sources/android/native_app_glue/android_native_app_glue.c )
+ 
+add_library( # Sets the name of the library.
+             native-lib
+ 
+             # Sets the library as a shared library.
+             SHARED
+ 
+             # Provides a relative path to your source file(s).
+             # Associated headers in the same location as their source
+             # file are automatically included.
+             src/main/cpp/main.cpp
+             src/main/cpp/android_tools.cpp )
+ 
+# Specifies a path to native header files.
+include_directories(${CMAKE_CURRENT_SOURCE_DIR}
+                    ${ANDROID_NDK}/sources/android/native_app_glue/)
+include_directories(libs/Irrlicht/include/)
+#>>>    NOTE: The above should be YOUR Irrlicht include directory. This is mine.
+#>>>          The path starts in the "app" directory of your project.
+ 
+# Searches for a specified prebuilt library and stores the path as a
+# variable. Because system libraries are included in the search path by
+# default, you only need to specify the name of the public NDK library
+# you want to add. CMake verifies that the library exists before
+# completing its build.
+ 
+find_library( # Sets the name of the path variable.
+              log-lib
+ 
+              # Specifies the name of the NDK library that
+              # you want CMake to locate.
+              log )
+ 
+# Specifies libraries CMake should link to your target library. You
+# can link multiple libraries, such as libraries you define in the
+# build script, prebuilt third-party libraries, or system libraries.
+ 
+target_link_libraries( native-lib
+                       app-glue
+                       android
+                       EGL
+                       log
+                       GLESv1_CM
+                       GLESv2
+                       z
+                       m
+                       ${log-lib}
+                       ${CMAKE_SOURCE_DIR}/libs/Irrlicht/source/Irrlicht/Android/obj/local/${ANDROID_ABI}/libIrrlicht.a)
+
+# >>>    NOTE: Just like above, this should be your path. This one is mine.  Links to 
+# the appropriate ABI. CAREFUL: You must have >ALL< Irrlicht ABIs built ("arm64-v8a", "armeabi", 
+# "armeabi-v7a", "mips64", "x86", "x86_64") otherwise you may run into installation errors on your 
+# virtual device.
+
+
+
+
+
+(NOTE: I placed important messages in comments that start with "#>>>". Make sure to read them)  Now 
+we need to make sure that we get the Irrlicht media packaged into the program for the HelloWorld 
+example. Open app > build.gradle and add this to the end of the file. Do not replace anything in 
+this file. 
+
+
+copy {
+    from "../../irrlicht"
+    into "src/main/assets"
+    include 'media/**'
+}
+
+
+
+
+(Note that you may need to change the irrlicht directory. This is where I placed mine. In the end, 
+this should create an assets folder with Irrlicht's media files into your Android Studio project 
+path "app/src/main")
+
+4. Use the Irrlicht example code Inside of your Irrlicht OGL-ES snapshot download, there is a 
+folder "IrrlichtPath/examples/01.HelloWorld_Android". In this folder, copy these files: 
+"android_tools.cpp", "android_tools.h", and "main.cpp". Paste these into your Android Studio 
+project path under directory "app/src/main/cpp"
+
+5. Run your project At this point, if you haven't synced your project, your project may say it's 
+missing some files (like android_native_app_glue.h). This is fine, Android Studio should fine it 
+once it builds your project.
+
+Open the AVD Manager (press the icon in Android Studio at the top that looks like a phone with the 
+Android symbol on it). If you don't have any virtual devices, create one and run it. If you do have 
+a virtual device: in the right-hand side of the AVD Manager window is an "Actions" column with a 
+drop-down arrow. Select it, and press "Cold Boot Now"
+
+*Important NOTE: "Cold Boot Now" is not required, but I've been having a lot of issues restarting 
+Android Studio emulators. While looking around on Google, it appears this is quite common. I was 
+getting error "Client couldn't connect within 7 seconds..." without doing a cold boot.
+
+Once your device starts up and is functional, go to Android Studio and select Run > Run 'app'.
+After your project builds, it should automatically open and run the Irrlicht program on the virtual device.
+
+Done!
+
+POSSIBLE ERRORS: If you get error "undefined symbol: ANativeActivity_onCreate", it's likely that 
+you removed "app_dummy()" from the Irrlicht example. This error is wierd, because Android Studio 
+puts a strike through this function and lists it as "deprecated," but it's still actually needed by 
+Irrlicht.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
